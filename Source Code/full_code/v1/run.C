@@ -1,5 +1,14 @@
 #include "utility.h"
 #include "run.h"
+#include <cmath>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+
+////////////////////////////////////////////////////////////////
+// Main Chare functions
+////////////////////////////////////////////////////////////////
 
 Main::Main(CkArgMsg* m){
 	delete m;
@@ -13,9 +22,11 @@ Main::Main(CkArgMsg* m){
 	double Co = 0.1;
 	double dt = Co*dx;
 	t_steps = int(end_time/dt);
+    
+    Te = 5.0*11604.0;
   
   // call read_file();
-  
+    read_file();
   
 	mainProxy = thisProxy;
 	cellProxy = CProxy_Cell::ckNew(dimX,dimY,dimZ);
@@ -38,8 +49,190 @@ void Main::done(){
 }
 
 void Main::read_file(){
-  
-}
+    int react1, react2, react3, prod1, prod2, prod3;
+    std::ifstream myfile;
+    std::string line;
+    int temp, numreact, numproduct, t;
+    string1D secspecies;
+    double1D sec, data;
+    data.resize(5);
+    std::string a1, a2, a3, a4, a5, a6, p1, p2 , p3, p4, p5, asname;
+    //double as;
+    myfile.open("methane_air_plasma_without_3rdbody.txt");
+    std::cout << "Reading file \n";
+    getline(myfile,line);
+    //while(!myfile.eof()){
+    getline(myfile,line);
+    std::istringstream iss1(line);
+    iss1 >> numSpecies;
+    std::cout << "Number of species : " << numSpecies << "\n";
+    species.resize(numSpecies);
+    Cp.resize(numSpecies);
+    Eb.resize(numSpecies);
+    //sp.resize(numSpecies); // warning!!!: comment out for now
+    K.resize(numSpecies);
+    getline(myfile,line);
+    getline(myfile,line);
+    for (int i = 0; i < numSpecies; i++){
+        getline(myfile,line);
+        std::istringstream iss2(line);
+        iss2 >> temp >> species[i] >> Cp[i] >> Eb[i];
+    }
+    std::cout << "Thermodynamics reading complete \n";
+    getline(myfile,line);
+    getline(myfile,line);
+    getline(myfile,line);
+    std::istringstream iss(line);
+    iss >> t;
+    std::cout << "Number of reactions : " << t << "\n";
+    for (int i = 0; i < t; i++){
+        getline(myfile,line);
+        std::istringstream iss(line);
+        iss >> temp >> numreact >> numproduct;
+        temp = 0;
+        if (numreact == 1){
+            iss >> a1 >> a2;
+            for (int j = 0; j < numSpecies; j++){
+                if (a1 == species[j]){
+                    react1 = j;
+                }
+            }
+        }
+        else if (numreact == 2){
+            iss >> a1 >> a2 >> a3 >> a4;
+            for (int j = 0; j < numSpecies; j++){
+                if (a1 == species[j]){
+                    react1 = j;
+                }
+                if (a3 == species[j]){
+                    react2 = j;
+                }
+            }
+        }
+        else{
+            iss >> a1 >> a2 >> a3 >> a4 >> a5 >> a6;
+            for (int j = 0; j < numSpecies; j++){
+                if (a1 == species[j]){
+                    react1 = j;
+                }
+                if (a3 == species[j]){
+                    react2 = j;
+                }
+                if (a5 == species[j]){
+                    react3 = j;
+                }
+            }
+        }
+        
+        
+        if (numproduct == 1){
+            iss >> p1;
+            for (int j = 0; j < numSpecies; j++){
+                if (p1 == species[j]){
+                    prod1 = j;
+                }
+            }
+        }
+        else if (numproduct == 2){
+            iss >> p1 >> p2 >> p3;
+            if (p1 == "M"){
+                temp = 1;
+                prod1 = numSpecies;
+            }
+            else if (p3 == "M"){
+                temp = 1;
+                prod2 = numSpecies;
+            }
+            for (int j = 0; j < numSpecies; j++){
+                if (p1 == species[j]){
+                    prod1 = j;
+                }
+                if (p3 == species[j]){
+                    prod2 = j;
+                }
+            }
+        }
+        else{
+            iss >> p1 >> p2 >> p3 >> p4 >> p5;
+            if (p1 == "M"){
+                temp = 1;
+                prod1 = numSpecies;
+            }
+            else if (p3 == "M"){
+                temp = 1;
+                prod2 = numSpecies;
+            }
+            else if (p5 == "M"){
+                temp = 1;
+                prod3 = numSpecies;
+            }
+            for (int j = 0; j < numSpecies; j++){
+                if (p1 == species[j]){
+                    prod1 = j;
+                }
+                if (p3 == species[j]){
+                    prod2 = j;
+                }
+                if (p5 == species[j]){
+                    prod3 = j;
+                }
+            }
+        }
+        std::cout << "Reading reactions : " << i << "\n";
+        data.clear();
+        data.resize(5);
+        iss >> data[0] >> data[1] >> data[2] >> data[3] >> data[4];
+        data[2] = double(0) - data[2];
+        data[0] = double(0) - data[0];
+        data[4] = double(0) - data[4];
+        if (numreact == 1){
+            data.push_back(react1);
+            K[react1].push_back(data);
+        }
+        else if (numreact == 2){
+            data.push_back(react1);
+            data.push_back(react2);
+            K[react1].push_back(data);
+            K[react2].push_back(data);
+        }
+        else{
+            data.push_back(react1);
+            data.push_back(react2);
+            data.push_back(react3);
+            K[react1].push_back(data);
+            K[react2].push_back(data);
+            K[react3].push_back(data);
+        }
+        data[0] = double(0) - data[0];
+        if (numproduct == 1){
+            K[prod1].push_back(data);
+        }
+        else if (numproduct == 2){
+            K[prod1].push_back(data);
+            K[prod2].push_back(data);
+        }
+        else{
+            K[prod1].push_back(data);
+            K[prod2].push_back(data);
+            K[prod3].push_back(data);
+        }
+    }
+    myfile.close();
+    std::ofstream myfile1;
+    myfile1.open("Output.txt");
+    myfile1 << "Electron temperature : " << Te/double(11604) << " eV \n";
+    myfile1 << "Time (s)" << "\t" << "Gas Temperature (K)";
+    for (int i = 0; i < numSpecies; i++){
+        myfile1 << "\t" << species[i];
+    }
+    myfile1 << "\n";
+    myfile1.close();
+} // end Main::read_file()
+
+
+///////////////////////////////////////////////////////////
+// Cell [3D] Chare Array functions
+///////////////////////////////////////////////////////////
 
 Cell::Cell(){
 	val_new.resize(ndiv);
@@ -111,6 +304,10 @@ void Cell::initialize(){
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////
+// Flux [3D] Chare Array Functions
+////////////////////////////////////////////////////////////////
 
 Flux::Flux(){
 	flux_c.resize(ndiv);
@@ -254,6 +451,10 @@ void Flux::fluxFacetoCell(){
     }
   }
 }
+
+/////////////////////////////////////////////////////////////////////
+// Interface [4D] Chare Array Functions
+/////////////////////////////////////////////////////////////////////
 
 Interface::Interface(){
 //	CkPrintf("Interface being created with index (%d,%d,%d,%d) \n", thisIndex.w, thisIndex.x, thisIndex.y, thisIndex.z  );

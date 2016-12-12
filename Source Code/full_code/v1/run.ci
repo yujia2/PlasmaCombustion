@@ -13,14 +13,17 @@ mainmodule run{
 	readonly int ndiv;
 	readonly double gma;
   
-  readonly string1D species;
-  readonly double1D Cp, Eb;
-  readonly double3D K;
+  	readonly string1D species;
+  	readonly double1D Cp;
+  	readonly double1D Eb;
+  	readonly double3D K;
+
+  	readonly double Te;
 
 	mainchare Main{
 		entry Main(CkArgMsg* m);
 		entry [reductiontarget] void done();
-    entry [reductiontarget] void InterfaceIsUp();
+    	entry [reductiontarget] void InterfaceIsUp();
 	};
 
 	array [3D] Cell{

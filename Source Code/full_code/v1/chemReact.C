@@ -236,7 +236,7 @@ void solve_rxn(){
   k2.resize(size);
   k3.resize(size);
   k4.resize(size);
-	initialize();
+    initialize();
   write_file(-1);
   for (int i = 0; i < iter; i++){
     //sp1 = sp;

@@ -12,9 +12,9 @@
 
 Main::Main(CkArgMsg* m){
 	delete m;
-	dimX = 5;
-	dimY = 2;
-	dimZ = 2;
+	dimX = 100;
+	dimY = 5;
+	dimZ = 5;
 	ndiv = 10;
 	gma = 1.4;
 	dx = double(1)/(dimX*ndiv);
@@ -25,7 +25,7 @@ Main::Main(CkArgMsg* m){
     
     Te = 5.0*11604.0;
     end_time_chem = 1.0e-7; // in s
-    dt_chem = 1.0e-15; // in s
+    dt_chem = 1.0e-10; // in s
     iter_chem = int(end_time_chem/dt_chem);
     R = 8.314; // Gas constat in J/mol.K
     Av = 6.022e23; // Avogadro's number
@@ -313,7 +313,7 @@ void Cell::initialize(){
 void Cell::solve_rnx() {
     double1D sp1, sp_temp;
     double1D k, k1, k2, k3, k4;
-    wf = 1000;
+    wf = 500;
     Tg = 300;
     
     size = species.size();
@@ -338,7 +338,7 @@ void Cell::solve_rnx() {
         k = k1/double(6) + k2/double(3) + k3/double(3) + k4/double(6);
         sp = sp + k*dt_chem;
         calc_temp(k);
-        std::cout << "Iteration : " << i << "\n";
+        //std::cout << "Iteration : " << i << "\n";
         if (i%wf == (wf-1)){
             write_file(i);
         }

@@ -36,12 +36,12 @@ mainmodule run{
 		entry void ftoc(flow3D c_f);
 		entry void solve_c(){
 			for (iter = 0; iter < t_steps; iter++){
-				serial "do chemical reaction for each cell" { 
-					solve_rnx();
-				}
-
 				serial "send_to_flux_from_cell"{
+          CkPrintf("Cell [%d, %d, %d] : Running iteration %d \n", thisIndex.x, thisIndex.y, thisIndex.z, iter);
 					fluxProxy(thisIndex.x,thisIndex.y,thisIndex.z).ctof(val_old,P);
+				}
+        serial "do chemical reaction for each cell" { 
+					solve_rnx();
 				}
 				when ftoc(flow3D c_f) serial "receive_from_flux_to_cell"{
 					calcvar3D(val_new,val_old,c_f);

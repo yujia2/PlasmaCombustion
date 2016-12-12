@@ -73,6 +73,7 @@ class Cell: public CBase_Cell{
         void write_file(int);
         void calc_change(double1D& t_k, double1D& t_s);
         void calc_temp(double1D& k);
+        void WriteOutput();
 };
 
 class Flux: public CBase_Flux{

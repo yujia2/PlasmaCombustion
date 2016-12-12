@@ -19,6 +19,11 @@ mainmodule run{
   	readonly double3D K;
 
   	readonly double Te;
+	readonly double end_time_chem; // in s
+	readonly double dt_chem; // in s
+	readonly int iter_chem;
+	readonly double R; // Gas constat in J/mol.K
+	readonly double Av; // Avogadro number
 
 	mainchare Main{
 		entry Main(CkArgMsg* m);
@@ -31,6 +36,10 @@ mainmodule run{
 		entry void ftoc(flow3D c_f);
 		entry void solve_c(){
 			for (iter = 0; iter < t_steps; iter++){
+				serial "do chemical reaction for each cell" { 
+					solve_rnx();
+				}
+
 				serial "send_to_flux_from_cell"{
 					fluxProxy(thisIndex.x,thisIndex.y,thisIndex.z).ctof(val_old,P);
 				}

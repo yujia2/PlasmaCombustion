@@ -6,21 +6,21 @@
 #include "utility.h"
 
 //std::string species_info = ;
-double Te = 5.0*11604.0; //in K
-double Tg = 300.0; // in K
-double end_time = 1.0e-7; // in s
-double dt = 1.0e-15; // in s
-int iter = int(end_time/dt);
-double R = 8.314; // Gas constat in J/mol.K
-double Av = 6.022e23; // Avogadro's number
+double Te = 5.0*11604.0; //in K // global
+double Tg = 300.0; // in K // Cell member
+double end_time = 1.0e-7; // in s // global
+double dt = 1.0e-15; // in s // global
+int iter = int(end_time/dt); // global
+double R = 8.314; // Gas constat in J/mol.K // global
+double Av = 6.022e23; // Avogadro's number // global
 
-double3D K;
-int size;
-string1D species;
-double1D sp;
-double1D Eb;
-double1D Cp;
-int wf = 1000; // Frequency of writing output to file
+double3D K; // global
+int size; // local
+string1D species; // global
+double1D sp; // Cell member
+double1D Eb; // global
+double1D Cp; // global
+int wf = 1000; // Frequency of writing output to file // Cell member
 
 void read_file();
 void solve_rxn();

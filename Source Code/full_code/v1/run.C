@@ -24,6 +24,11 @@ Main::Main(CkArgMsg* m){
 	t_steps = int(end_time/dt);
     
     Te = 5.0*11604.0;
+    end_time_chem = 1.0e-7; // in s
+    dt_chem = 1.0e-15; // in s
+    iter_chem = int(end_time_chem/dt_chem);
+    R = 8.314; // Gas constat in J/mol.K
+    Av = 6.022e23; // Avogadro's number
   
   // call read_file();
     read_file();
@@ -303,6 +308,94 @@ void Cell::initialize(){
 			}
 		}
 	}
+}
+
+void Cell::solve_rnx() {
+    double1D sp1, sp_temp;
+    double1D k, k1, k2, k3, k4;
+    wf = 1000;
+    Tg = 300;
+    
+    size = species.size();
+    sp.resize(size);
+    sp1.resize(size);
+    sp_temp.resize(size);
+    k1.resize(size);
+    k2.resize(size);
+    k3.resize(size);
+    k4.resize(size);
+    initialize_sp();
+    write_file(-1);
+    for (int i = 0; i < iter_chem; i++){
+        //sp1 = sp;
+        calc_change(k1,sp);
+        sp_temp = sp + k1*(dt_chem/double(2));
+        calc_change(k2,sp_temp);
+        sp_temp = sp + k2*(dt_chem/double(2));
+        calc_change(k3,sp_temp);
+        sp_temp = sp + k3*dt_chem;
+        calc_change(k4,sp_temp);
+        k = k1/double(6) + k2/double(3) + k3/double(3) + k4/double(6);
+        sp = sp + k*dt_chem;
+        calc_temp(k);
+        std::cout << "Iteration : " << i << "\n";
+        if (i%wf == (wf-1)){
+            write_file(i);
+        }
+    }
+}
+
+void Cell::initialize_sp() {
+    for (int i = 0; i < size; i++){
+        sp[i] = 0.0;
+    }
+    sp[21] = 0.0;
+    sp[10] = 4.0e-8*Av;
+    sp[3] = 2.0*sp[10];
+    sp[19] = 4.0*sp[3];
+}
+
+void Cell::write_file(int it){
+    std::ofstream myfile;
+    std::stringstream stream;
+    myfile.open("Output.txt", std::ofstream::app);
+    myfile << std::scientific << std::setprecision(1) << double((it+1)*dt_chem) << "\t" << Tg;
+    for (int i = 0; i < size; i++){
+        myfile << "\t" << std::scientific << std::setprecision(1) << sp[i];
+    }
+    myfile << "\n";
+    myfile.close();
+}
+
+void Cell::calc_change(double1D& t_k, double1D& t_s){
+    double temp;
+    for (unsigned int x = 0; x < K.size(); x++){
+        t_k[x] = 0.0;
+        for (unsigned int y = 0; y < K[x].size(); y++){
+            temp = K[x][y][0]*pow(300.0/Tg,K[x][y][1])*exp(K[x][y][2]/(R*Tg))*pow(300.0/Te,K[x][y][3])*exp(K[x][y][4]/(R*Te));
+            //std::cout << temp << "\t";
+            for (unsigned int z = 5; z < K[x][y].size(); z++){
+                temp *= t_s[int(K[x][y][z])];
+            }
+            //std::cout << temp << "\t";
+            t_k[x] += temp;
+        }
+        //std::cout << "\n";
+        //std::cout << t_k[x];
+    }
+}
+
+void Cell::calc_temp(double1D& k){
+    double dnE = 0.0;
+    double n = 0.0;
+    double nCp = 0.0;
+    for (int i = 0; i < size; i++){
+        dnE += (k[i]*Eb[i]);
+        n += sp[i];
+        nCp += (sp[i]*Cp[i]);
+    }
+    //std::cout << dnE*n/nCp*dt << "\n";
+    Tg -= (dnE*n/nCp * dt_chem * dt_chem);
 }
 
 ////////////////////////////////////////////////////////////////

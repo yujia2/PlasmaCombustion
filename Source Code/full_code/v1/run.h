@@ -24,6 +24,11 @@
 /*readonly*/ double3D K;
 
 /*readonly*/ double Te;
+/*readonly*/ double end_time_chem; // in s
+/*readonly*/ double dt_chem; // in s
+/*readonly*/ int    iter_chem;
+/*readonly*/ double R; // Gas constat in J/mol.K
+/*readonly*/ double Av; // Avogadro's number
 
 class Main: public CBase_Main{
 public:
@@ -41,6 +46,11 @@ class Cell: public CBase_Cell{
 		flow3D val_new, val_old;
 		double3D P;
 		int iter;
+    
+        double1D sp; // warning: since I assume sp is related to each cell, so add it as a member variable
+        int size;
+        int wf; // frequency of writing output
+        int Tg;
 
 		Cell();
 		Cell(CkMigrateMessage* m){}
@@ -56,6 +66,13 @@ class Cell: public CBase_Cell{
 		void initialize();
 		void gaslaw();
 		void calcvar3D(flow3D&,flow3D,flow3D);
+    
+        // functions for chemical reactions
+        void solve_rnx();
+        void initialize_sp();
+        void write_file(int);
+        void calc_change(double1D& t_k, double1D& t_s);
+        void calc_temp(double1D& k);
 };
 
 class Flux: public CBase_Flux{
